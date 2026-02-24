@@ -252,7 +252,7 @@ Join our channel for updates:`;
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '120363404186001130@newsletter',
-                        newsletterName: 'KnightBot MD by Mr Unique Hacker',
+                        newsletterName: 'KnightBot MD by Lee Tech',
                         serverMessageId: -1
                     } 
                 }
