@@ -1,5 +1,5 @@
 /**
- * Knight Bot - A WhatsApp Bot
+ * LEE TECH BOT - A WhatsApp Bot
  * Autotyping Command - Shows fake typing status
  */
 

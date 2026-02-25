@@ -10,7 +10,7 @@ This is a WhatsApp bot built using the Baileys library for group management, inc
 
 <div align="center"> 
   <a href="https://youtube.com/@mr_unique_hacker"> 
-    <img src="https://github.com/networkserver06-commits/Knightbot-MD/blob/main/assets/bot_image.jpg" alt="Knight Bot" height="300"> 
+    <img src="https://github.com/networkserver06-commits/Knightbot-MD/blob/main/assets/bot_image.jpg" alt="LEE TECH BOT" height="300"> 
   </a> 
 </div>
 
@@ -50,7 +50,7 @@ This is a WhatsApp bot built using the Baileys library for group management, inc
 
 ### Step 1: Fork the Repository
 
-Click the button below to fork the Knight Bot repository to your GitHub account:
+Click the button below to fork the LEE TECH BOT repository to your GitHub account:
 
 <div align="center">
   <a href="https://github.com/mruniquehacker/Knightbot-MD/fork">

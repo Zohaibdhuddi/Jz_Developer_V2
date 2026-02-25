@@ -1,5 +1,5 @@
 /**
- * Knight Bot - A WhatsApp Bot
+ * LEE TECH BOT - A WhatsApp Bot
  * Autoread Command - Automatically read all messages
  */
 
@@ -155,7 +155,7 @@ function isBotMentionedInMessage(message, botNumber) {
         }
         
         // Check for bot name mentions (optional, can be customized)
-        const botNames = [global.botname?.toLowerCase(), 'bot', 'knight', 'knight bot'];
+        const botNames = [global.botname?.toLowerCase(), 'bot', 'knight', 'LEE TECH BOT'];
         const words = textContent.toLowerCase().split(/\s+/);
         if (botNames.some(name => words.includes(name))) {
             return true;
