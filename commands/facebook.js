@@ -2,110 +2,95 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * Advanced Facebook Downloader
+ * Features: 403 Bypass, Buffer Stream, Size Check, and Auto-Cleanup
+ */
 async function facebookCommand(sock, chatId, message) {
     try {
-        // 1. Extract URL safely from various message types
-        const text = message.message?.conversation || 
-                     message.message?.extendedTextMessage?.text || 
-                     message.message?.imageMessage?.caption || "";
+        // 1. Extract and Validate URL
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || "";
         const url = text.split(' ').slice(1).join(' ').trim();
         
         if (!url) {
-            return await sock.sendMessage(chatId, { 
-                text: "❌ Please provide a Facebook video URL.\nExample: *.fb https://www.facebook.com/...*"
-            }, { quoted: message });
+            return await sock.sendMessage(chatId, { text: "📝 *Usage:* .fb <link>" }, { quoted: message });
         }
 
-        // 2. Basic URL Validation
-        if (!/facebook\.com|fb\.watch/g.test(url)) {
-            return await sock.sendMessage(chatId, { 
-                text: "❌ That is not a valid Facebook link."
-            }, { quoted: message });
-        }
-
-        // 3. Loading Feedback
+        // 2. Visual Feedback
         await sock.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
-        // 4. API Fetching Logic
+        // 3. API Request to fetch the streamable link
         const apiUrl = `https://api.botcahx.eu.org/api/dowloader/fbdown?url=${encodeURIComponent(url)}&apikey=btch-beta`;
-        
-        const response = await axios.get(apiUrl, {
-            timeout: 30000,
+        const apiResponse = await axios.get(apiUrl, { timeout: 15000 });
+        const res = apiResponse.data;
+
+        if (!res || !res.status) {
+            throw new Error("API failed to resolve this link. The video might be private.");
+        }
+
+        // 4. Quality Selection (Prefer HD, fallback to SD)
+        const videoUrl = res.result?.media?.video_hd || res.result?.media?.video_sd || res.result?.url;
+        const videoTitle = res.result?.title || "Facebook Video";
+
+        if (!videoUrl) throw new Error("No downloadable stream found.");
+
+        // 5. Prepare Temporary File
+        const tmpDir = path.join(process.cwd(), 'tmp');
+        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+        const tempPath = path.join(tmpDir, `fb_${Date.now()}.mp4`);
+
+        // 6. Download with Spoofed Headers (Anti-403 Logic)
+        const writer = fs.createWriteStream(tempPath);
+        const videoFetch = await axios({
+            method: 'get',
+            url: videoUrl,
+            responseType: 'stream',
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+                'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
+                'Referer': 'https://www.facebook.com/',
+                'Range': 'bytes=0-' // Helps bypass some server-side blocks
             }
         });
 
-        const res = response.data;
-        if (!res || res.status !== true) {
-            throw new Error(res?.msg || "API returned invalid status");
+        // 7. Size Check (Limit to 100MB to prevent server lag)
+        const contentLength = videoFetch.headers['content-length'];
+        if (contentLength && parseInt(contentLength) > 104857600) { // 100MB
+            throw new Error("Video is too large (over 100MB).");
         }
 
-        // 5. Extract Video URL (Handling various nested structures)
-        // Checks: result.url -> result.video -> result.media (HD/SD)
-        let videoUrl = res.result?.url || 
-                       res.result?.video || 
-                       res.result?.media?.video_hd || 
-                       res.result?.media?.video_sd;
-        
-        let title = res.result?.title || "Facebook Video";
+        // 8. Execute Download
+        videoFetch.data.pipe(writer);
 
-        if (!videoUrl) {
-            throw new Error("Could not find a downloadable video stream.");
-        }
-
-        // 6. Send Video directly via URL (Fastest Method)
-        const caption = `✅ *Facebook Download*\n\n📝 *Title:* ${title}\n\n_Downloaded by LEE TECH Bot_`;
-
-        try {
-            await sock.sendMessage(chatId, {
-                video: { url: videoUrl },
-                mimetype: "video/mp4",
-                caption: caption,
-                fileName: `fb_video.mp4`
-            }, { quoted: message });
-            
-            await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-
-        } catch (sendError) {
-            console.error("Direct URL send failed, trying buffer method...");
-            
-            // 7. Fallback: Buffer Method (If direct URL is restricted)
-            const tmpDir = path.join(process.cwd(), 'tmp');
-            if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
-            const tempFile = path.join(tmpDir, `fb_${Date.now()}.mp4`);
-
-            const writer = fs.createWriteStream(tempFile);
-            const stream = await axios({
-                method: 'get',
-                url: videoUrl,
-                responseType: 'stream',
-                timeout: 60000
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', (err) => {
+                if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+                reject(err);
             });
+        });
 
-            stream.data.pipe(writer);
+        // 9. Send to WhatsApp
+        await sock.sendMessage(chatId, {
+            video: fs.readFileSync(tempPath),
+            mimetype: "video/mp4",
+            caption: `✅ *Facebook Download Success*\n\n📝 *Title:* ${videoTitle}\n⚖️ *Size:* ${(fs.statSync(tempPath).size / 1024 / 1024).toFixed(2)} MB`,
+            fileName: `${videoTitle}.mp4`
+        }, { quoted: message });
 
-            await new Promise((resolve, reject) => {
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-            });
-
-            await sock.sendMessage(chatId, {
-                video: fs.readFileSync(tempFile),
-                mimetype: "video/mp4",
-                caption: caption
-            }, { quoted: message });
-
-            // Cleanup
-            if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
-            await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
-        }
+        // 10. Final Cleanup
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
 
     } catch (error) {
-        console.error('Facebook Cmd Error:', error.message);
-        await sock.sendMessage(chatId, { 
-            text: `❌ *Error:* ${error.message || "Failed to process video."}` 
-        }, { quoted: message });
+        console.error('FB FULL ERROR:', error.message);
+        
+        let errorMsg = "❌ *Command Failed*";
+        if (error.message.includes('403')) errorMsg = "❌ *Error 403:* Access Forbidden. This video is likely private or age-restricted.";
+        if (error.message.includes('timeout')) errorMsg = "❌ *Timeout:* The server took too long to respond.";
+        if (error.message.includes('large')) errorMsg = "❌ *Size Error:* Video exceeds 100MB limit.";
+
+        await sock.sendMessage(chatId, { text: errorMsg }, { quoted: message });
         await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
