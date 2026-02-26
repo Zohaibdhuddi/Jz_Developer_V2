@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * ULTRA-STABILIZED FACEBOOK DOWNLOADER
- * Uses 4 different API sources to ensure the video is found.
+ * LEE TECH BOT - UNIVERSAL FACEBOOK DOWNLOADER
+ * Fully Working 2026 Edition
  */
 async function facebookCommand(sock, chatId, message) {
     try {
@@ -12,109 +12,111 @@ async function facebookCommand(sock, chatId, message) {
         let url = text.split(' ').slice(1).join(' ').trim();
         
         if (!url) {
-            return await sock.sendMessage(chatId, { text: "⚠️ *Usage:* .fb <facebook-link>" }, { quoted: message });
+            return await sock.sendMessage(chatId, { 
+                text: "📝 *Usage:* `.fb <link>`\n\nExample: `.fb https://www.facebook.com/reel/123456`" 
+            }, { quoted: message });
         }
 
-        // 1. Loading States
-        await sock.sendMessage(chatId, { react: { text: '🔄', key: message.key } });
+        // 1. Visual Progress
+        await sock.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
 
         let videoUrl = null;
         let title = "Facebook Video";
 
-        // --- API SOURCE 1: Widipe (Highly Stable) ---
-        if (!videoUrl) {
+        // --- MULTI-API FAILOVER SYSTEM ---
+        const apis = [
+            `https://api.vreden.my.id/api/facebook?url=${encodeURIComponent(url)}`,
+            `https://widipe.com/facebook?url=${encodeURIComponent(url)}`,
+            `https://api.botcahx.eu.org/api/dowloader/fbdown?url=${encodeURIComponent(url)}&apikey=btch-beta`,
+            `https://api.sandipbaruwal.com/fbvideo?url=${encodeURIComponent(url)}`
+        ];
+
+        for (const api of apis) {
             try {
-                const res = await axios.get(`https://widipe.com/facebook?url=${encodeURIComponent(url)}`);
-                if (res.data?.status && res.data.result?.video) {
-                    videoUrl = res.data.result.video;
-                    title = res.data.result.title || title;
+                const res = await axios.get(api, { timeout: 10000 });
+                // Check various response structures (result.video, result.url, result.media)
+                videoUrl = res.data.result?.video || 
+                           res.data.result?.url || 
+                           res.data.result?.media?.video_hd || 
+                           res.data.result?.link ||
+                           res.data.video_url;
+                
+                if (videoUrl) {
+                    title = res.data.result?.title || res.data.title || title;
+                    break; // Exit loop once a valid URL is found
                 }
-            } catch (e) { console.log("Widipe API Failed"); }
+            } catch (e) {
+                console.log(`API check failed for: ${api}`);
+                continue; 
+            }
         }
 
-        // --- API SOURCE 2: Botcahx V1 ---
-        if (!videoUrl) {
-            try {
-                const res = await axios.get(`https://api.botcahx.eu.org/api/dowloader/fbdown?url=${encodeURIComponent(url)}&apikey=btch-beta`);
-                if (res.data?.status) {
-                    videoUrl = res.data.result?.media?.video_hd || res.data.result?.url;
-                }
-            } catch (e) { console.log("Botcahx V1 Failed"); }
-        }
-
-        // --- API SOURCE 3: Botcahx V2 (Alternate Route) ---
-        if (!videoUrl) {
-            try {
-                const res = await axios.get(`https://api.botcahx.eu.org/api/dowloader/fbdown2?url=${encodeURIComponent(url)}&apikey=btch-beta`);
-                if (res.data?.status) {
-                    videoUrl = res.data.result?.link || res.data.result?.url;
-                }
-            } catch (e) { console.log("Botcahx V2 Failed"); }
-        }
-
-        // --- API SOURCE 4: Global Rest API Fallback ---
-        if (!videoUrl) {
-            try {
-                const res = await axios.get(`https://api.alyarchive.eu.org/api/fbdown?url=${encodeURIComponent(url)}`);
-                if (res.data?.status) {
-                    videoUrl = res.data.result?.url || res.data.result?.data?.[0]?.url;
-                }
-            } catch (e) { console.log("Global API Failed"); }
-        }
-
-        // 2. Final Check
+        // 2. Error if no API worked
         if (!videoUrl) {
             await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
             return await sock.sendMessage(chatId, { 
-                text: "❌ *Could not resolve video link.*\n\nPossible reasons:\n1. The video is **Private** (Bot cannot see it).\n2. The link is a **Story** (Stories expire quickly).\n3. All API servers are currently being blocked by Facebook." 
+                text: "❌ *All servers are failing to process this link.*\n\nPossible reasons:\n• The video is **Private**.\n• The link is an **expired Story**.\n• Facebook has temporarily blocked your server IP." 
             }, { quoted: message });
         }
 
-        // 3. Download Process
+        // 3. Download to Local Storage (Bypass Direct Link Block)
         const tmpDir = path.join(process.cwd(), 'tmp');
         if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
         const tempPath = path.join(tmpDir, `fb_${Date.now()}.mp4`);
 
         const writer = fs.createWriteStream(tempPath);
-        const videoStream = await axios({
+        
+        // Critical: High-quality headers to mimic a Chrome browser
+        const videoResponse = await axios({
             method: 'get',
             url: videoUrl,
             responseType: 'stream',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Referer': 'https://www.facebook.com/'
+                'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
+                'Referer': 'https://www.facebook.com/',
+                'Connection': 'keep-alive',
+                'Range': 'bytes=0-'
             },
-            timeout: 90000 
+            timeout: 120000 // 2 minutes for large videos
         });
 
-        videoStream.data.pipe(writer);
+        videoResponse.data.pipe(writer);
 
         await new Promise((resolve, reject) => {
             writer.on('finish', resolve);
-            writer.on('error', reject);
+            writer.on('error', (err) => {
+                if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+                reject(err);
+            });
         });
 
-        // 4. Verification and Sending
-        const fileStats = fs.statSync(tempPath);
-        if (fileStats.size > 100) { // Check if file is not empty/error page
+        // 4. Send the Video
+        const stats = fs.statSync(tempPath);
+        if (stats.size > 5000) { // Safety check: File must be > 5KB
             await sock.sendMessage(chatId, {
                 video: fs.readFileSync(tempPath),
                 mimetype: "video/mp4",
-                caption: `✅ *LEE TECH BOT Download*\n\n📝 *Title:* ${title}\n⚖️ *Size:* ${(fileStats.size / (1024 * 1024)).toFixed(2)} MB`,
+                caption: `✅ *LEE TECH BOT - SUCCESS*\n\n📝 *Title:* ${title}\n⚖️ *Size:* ${(stats.size / (1024 * 1024)).toFixed(2)} MB`,
             }, { quoted: message });
+            
             await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
         } else {
-            throw new Error("Downloaded file is empty (Possible 403 block).");
+            throw new Error("Downloaded file is corrupt or a 403 error page.");
         }
 
         // 5. Cleanup
         if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
 
     } catch (error) {
-        console.error('FB ULTIMATE ERROR:', error);
-        await sock.sendMessage(chatId, { 
-            text: `❌ *Error:* ${error.message.includes('403') ? 'Facebook blocked the stream. Try again later.' : 'Failed to process video.'}` 
-        }, { quoted: message });
+        console.error('FB FULL ERROR:', error.message);
+        
+        let msg = "❌ *Download Failed*";
+        if (error.message.includes('403')) msg = "❌ *Error 403:* Facebook is blocking the bot's IP. Try again in 5 minutes.";
+        if (error.message.includes('timeout')) msg = "❌ *Timeout:* The video is too large or server is slow.";
+
+        await sock.sendMessage(chatId, { text: msg }, { quoted: message });
+        await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
 
