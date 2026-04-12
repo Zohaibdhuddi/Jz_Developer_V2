@@ -178,7 +178,7 @@ If you find this project helpful and want to support the developer, consider sup
 
 <div align="center">
 
-<img src="assets/bmc_qr.png" alt="subscribe youtube channel" width="200">
+<img src="assets/bmc_qr.png" alt="subscribe youtube channel" height="300">
 
 </div>
 
