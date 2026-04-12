@@ -9,7 +9,7 @@ This is a WhatsApp bot built using the Baileys library for group management, inc
 </div> 
 
 <div align="center"> 
-  <a href="https://youtube.com/@zohaib_abbas?si=DNvDCiHYorPokWKC"> 
+  <a href="https://youtube.com/@zohaib_abbas"> 
     <img src="https://github.com/Zohaibdhuddi/Jz_Developer_V2/blob/main/assets%2Fbot_image.jpg" alt="Knight Bot" height="300"> 
   </a> 
 </div>
