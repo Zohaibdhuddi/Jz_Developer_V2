@@ -178,7 +178,7 @@ If you find this project helpful and want to support the developer, consider sup
 
 <div align="center"> 
   <a href="https://youtube.com/@zohaib_abbas"> 
-    <img src="https://github.com/Zohaibdhuddi/Jz_Developer_V2/blob/main/assets%bmc_qr.png" alt="Jz_Developer_V2" height="300"> 
+    <img src="https://github.com/Zohaibdhuddi/Jz_Developer_V2/blob/main/assets%2Fbmc_qr.png" alt="Jz_Developer_V2" height="300"> 
   </a> 
 </div>
 
