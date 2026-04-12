@@ -174,11 +174,11 @@ It is lightweight and can be easily customized to add more commands as per your 
 
 </div>
 
-If you find this project helpful and want to support the developer, consider buying me a coffee! Your support helps maintain and improve this open-source project.
+If you find this project helpful and want to support the developer, consider support me a youtube! Your support helps maintain and improve this open-source project.
 
 <div align="center">
 
-<img src="assets/bmc_qr.png" alt="Buy Me a Coffee QR Code" width="200">
+<img src="assets/bmc_qr.png" alt="subscribe youtube channel" width="200">
 
 </div>
 
