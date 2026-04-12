@@ -169,7 +169,7 @@ It is lightweight and can be easily customized to add more commands as per your 
 <div align="center">
 
 <a href="https://youtube.com/@zohaib_abbas?si=DNvDCiHYorPokWKC" target="_blank">
-  <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support%20Developer-FF813F?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white" alt= subscribe youtube channel >
+  <img src="https://img.shields.io/badge/Buy%20Me%20a%20%20Developer-FF813F?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white" alt= subscribe youtube channel >
 </a>
 
 </div>
