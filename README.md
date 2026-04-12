@@ -176,11 +176,13 @@ It is lightweight and can be easily customized to add more commands as per your 
 
 If you find this project helpful and want to support the developer, consider support me a youtube! Your support helps maintain and improve this open-source project.
 
-<div align="center">
-
-<img src="assets/bmc_qr.png" alt="subscribe youtube channel" height="300">
-
+<div align="center"> 
+  <a href="https://youtube.com/@zohaib_abbas"> 
+    <img src="https://github.com/Zohaibdhuddi/Jz_Developer_V2/blob/main/assets%bmc_qr.png" alt="Jz_Developer_V2" height="300"> 
+  </a> 
 </div>
+
+
 
 ---
 
